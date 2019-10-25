@@ -10,6 +10,7 @@
     "url": "https://github.com/styled-components/vue-styled-components/issues"
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "npm run build:lib && npm run build:dist",
     "prebuild:lib": "rm -rf lib/*",
     "build:lib": "babel --out-dir lib src",
