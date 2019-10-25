@@ -3,6 +3,8 @@ import expect from 'expect'
 
 import styleSheet from '../models/StyleSheet'
 import { resetStyled } from './utils'
+import VueCompositionApi from '@vue/composition-api'
+Vue.use(VueCompositionApi)
 
 let styled
 

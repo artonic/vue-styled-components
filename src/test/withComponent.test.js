@@ -1,6 +1,9 @@
 import Vue from 'vue'
 import { assert } from 'chai'
 
+import VueCompositionApi from '@vue/composition-api'
+Vue.use(VueCompositionApi)
+
 import { resetStyled } from './utils'
 
 let styled

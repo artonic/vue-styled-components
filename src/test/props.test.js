@@ -3,6 +3,9 @@ import Vue from 'vue'
 import { resetStyled, expectCSSMatches } from './utils'
 import ThemeProvider from "../providers/ThemeProvider"
 
+import VueCompositionApi from '@vue/composition-api'
+Vue.use(VueCompositionApi)
+
 let styled
 
 describe('props', () => {

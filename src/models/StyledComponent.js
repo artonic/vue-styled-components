@@ -1,5 +1,6 @@
 import css from '../constructors/css'
 import normalizeProps from '../utils/normalizeProps'
+import { createComponent, computed, watch, inject, createElement as h, ref } from '@vue/composition-api'
 
 export default (ComponentStyle) => {
   const createStyledComponent = (target, rules, props) => {
@@ -9,85 +10,63 @@ export default (ComponentStyle) => {
     const currentProps = normalizeProps(props)
     const prevProps = normalizeProps(target.props)
 
-    const StyledComponent = {
-      inject: {
-        $theme: {
-          default: function () {
-            return () => ({ })
-          }
-        }
-      },
+    const StyledComponent = createComponent({
       props: {
         value: null,
         ...currentProps,
         ...prevProps
       },
-      data () {
-        return {
-          localValue: this.value
-        }
-      },
-      render (createElement) {
-        const children = []
-        for (const slot in this.$slots) {
-          if (slot === 'default') {
-            children.push(this.$slots[slot])
-          } else {
-            children.push(createElement('template', { slot }, this.$slots[slot]))
-          }
-        }
+      setup (initProps, setupContext) {
+        const localValue = ref(initProps.value)
+        const injectedTheme = inject('$theme', () => ({}))
+        const theme = computed(() => injectedTheme())
+        const generatedClassName = computed(() => {
+          const componentProps = { theme: theme.value, ...initProps }
+          return componentStyle.generateAndInjectStyles(componentProps)
+        })
 
-        return createElement(
-          target,
-          {
-            class: [this.generatedClassName],
-            props: this.$props,
+        watch(() => setupContext.emit('input', localValue.value))
+
+        return () => {
+          const children = []
+
+          for (const slot in setupContext.slots) {
+            if (slot === 'default') {
+              children.push(setupContext.slots[slot]())
+            } else {
+              children.push(h('template', { slot }, setupContext.slots[slot]()))
+            }
+          }
+
+          return h(target, {
+            class: [generatedClassName.value],
+            props: initProps,
             domProps: {
-              value: this.localValue
+              value: localValue.value
             },
             on: {
-              ...this.$listeners,
+              ...setupContext.listeners,
               input: event => {
                 if (event && event.target) {
-                  this.localValue = event.target.value
+                  localValue.value = event.target.value
                 }
               }
             },
-            scopedSlots: this.$scopedSlots
+            scopedSlots: setupContext.slots
           },
-          children
-        )
-      },
-      methods: {
-        generateAndInjectStyles (componentProps) {
-          return componentStyle.generateAndInjectStyles(componentProps)
+          children)
         }
       },
-      computed: {
-        generatedClassName () {
-          const componentProps = { theme: this.theme, ...this.$props }
-          return this.generateAndInjectStyles(componentProps)
-        },
-        theme () {
-          return this.$theme()
-        }
-      },
-      watch: {
-        value (newValue) {
-          this.localValue = newValue
-        },
-        localValue () {
-          this.$emit('input', this.localValue)
-        }
-      },
+
       extend (cssRules, ...interpolations) {
         const extendedRules = css(cssRules, ...interpolations)
         return createStyledComponent(target, rules.concat(extendedRules), props)
       },
+
       withComponent (newTarget) {
         return createStyledComponent(newTarget, rules, props)
       }
-    }
+    })
 
     return StyledComponent
   }

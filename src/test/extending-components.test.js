@@ -3,6 +3,9 @@ import expect from 'expect'
 
 import { resetStyled, expectCSSMatches } from './utils'
 
+import VueCompositionApi from '@vue/composition-api'
+Vue.use(VueCompositionApi)
+
 let styled
 
 describe('extending components', () => {
